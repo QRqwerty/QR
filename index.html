@@ -10,6 +10,9 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     
+    <!-- Подключаем библиотеку для сканирования QR -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    
     <!-- Подключаем Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -30,6 +33,12 @@
         .alert {
             @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded;
         }
+        #reader {
+            width: 100% !important;
+        }
+        #reader video {
+            width: 100% !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -40,6 +49,16 @@
             const [scanResult, setScanResult] = React.useState(null);
             const [error, setError] = React.useState(null);
             const [isCameraActive, setIsCameraActive] = React.useState(false);
+            const [html5QrCode, setHtml5QrCode] = React.useState(null);
+
+            React.useEffect(() => {
+                // Очистка при размонтировании компонента
+                return () => {
+                    if (html5QrCode) {
+                        html5QrCode.stop().catch(error => console.error('Ошибка при остановке камеры:', error));
+                    }
+                };
+            }, [html5QrCode]);
 
             // Имитация работы с устройством сканирования
             const mockExternalScannerData = {
@@ -48,12 +67,16 @@
 
             // Функция для разбора данных QR кода
             const parseQRData = (data) => {
-                const [firstName, lastName, ...rooms] = data.split(',');
-                return {
-                    firstName,
-                    lastName,
-                    rooms: rooms.length ? rooms.map(Number) : 'all'
-                };
+                try {
+                    const [firstName, lastName, ...rooms] = data.split(',');
+                    return {
+                        firstName,
+                        lastName,
+                        rooms: rooms.length ? rooms.map(Number) : 'all'
+                    };
+                } catch (err) {
+                    throw new Error('Неверный формат QR кода');
+                }
             };
 
             // Имитация сохранения в базу данных
@@ -95,25 +118,57 @@
                 }
             };
 
-            // Имитация сканирования камерой телефона
+            // Реальное сканирование камерой
             const handleCameraScan = async () => {
                 try {
+                    setError(null);
                     setIsCameraActive(true);
-                    // Запрашиваем доступ к камере
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    // В реальном приложении здесь будет код для сканирования QR-кода
-                    // Сейчас просто имитируем задержку и результат
-                    setTimeout(() => {
-                        stream.getTracks().forEach(track => track.stop()); // Останавливаем камеру
-                        const mockCameraData = "Alice,Smith,2,3";
-                        const userData = parseQRData(mockCameraData);
-                        setScanResult(userData);
-                        saveToDatabase(userData);
-                        setIsCameraActive(false);
-                    }, 2000);
+
+                    const html5QrCode = new Html5Qrcode("reader");
+                    setHtml5QrCode(html5QrCode);
+
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    };
+
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        async (decodedText) => {
+                            // Успешное сканирование
+                            try {
+                                const userData = parseQRData(decodedText);
+                                setScanResult(userData);
+                                saveToDatabase(userData);
+                                
+                                // Останавливаем сканирование после успешного результата
+                                await html5QrCode.stop();
+                                setIsCameraActive(false);
+                            } catch (err) {
+                                setError('Неверный формат QR кода');
+                            }
+                        },
+                        (errorMessage) => {
+                            // Игнорируем промежуточные ошибки сканирования
+                        }
+                    );
                 } catch (err) {
                     setError('Ошибка при доступе к камере');
                     setIsCameraActive(false);
+                }
+            };
+
+            // Остановка сканирования
+            const stopScanning = async () => {
+                if (html5QrCode) {
+                    try {
+                        await html5QrCode.stop();
+                        setIsCameraActive(false);
+                    } catch (err) {
+                        console.error('Ошибка при остановке сканирования:', err);
+                    }
                 }
             };
 
@@ -123,21 +178,35 @@
                         <h2 className="text-2xl font-bold mb-4">QR Сканер</h2>
                         
                         <div className="space-y-4">
-                            <button 
-                                onClick={handleCameraScan}
-                                disabled={isCameraActive}
-                                className="button button-primary w-full"
-                            >
-                                {isCameraActive ? 'Сканирование...' : 'Сканировать камерой'}
-                            </button>
-                            
-                            <button 
-                                onClick={handleExternalScan}
-                                className="button button-outline w-full"
-                            >
-                                Сканировать внешним устройством
-                            </button>
+                            {!isCameraActive ? (
+                                <>
+                                    <button 
+                                        onClick={handleCameraScan}
+                                        className="button button-primary w-full"
+                                    >
+                                        Сканировать камерой
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={handleExternalScan}
+                                        className="button button-outline w-full"
+                                    >
+                                        Сканировать внешним устройством
+                                    </button>
+                                </>
+                            ) : (
+                                <button 
+                                    onClick={stopScanning}
+                                    className="button button-primary w-full"
+                                >
+                                    Остановить сканирование
+                                </button>
+                            )}
                         </div>
+
+                        {isCameraActive && (
+                            <div id="reader" className="mt-4"></div>
+                        )}
 
                         {error && (
                             <div className="alert mt-4">
