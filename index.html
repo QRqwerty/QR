@@ -1,133 +1,169 @@
-import React, { useState } from 'react';
-import { Camera } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner</title>
+    
+    <!-- Подключаем React -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    
+    <!-- Подключаем Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Стили для приложения -->
+    <style>
+        .button {
+            @apply px-4 py-2 rounded-lg font-medium transition-colors;
+        }
+        .button-primary {
+            @apply bg-blue-500 text-white hover:bg-blue-600;
+        }
+        .button-outline {
+            @apply border border-gray-300 hover:bg-gray-100;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-lg p-6;
+        }
+        .alert {
+            @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
 
-// Имитация работы с устройством сканирования
-const mockExternalScannerData = {
-  scan: () => {
-    // Имитация данных от сканера
-    return "John,Doe,1,3,4";
-  }
-};
+    <script type="text/babel">
+        const QRScanner = () => {
+            const [scanResult, setScanResult] = React.useState(null);
+            const [error, setError] = React.useState(null);
+            const [isCameraActive, setIsCameraActive] = React.useState(false);
 
-const QRScanner = () => {
-  const [scanResult, setScanResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  
-  // Функция для разбора данных QR кода
-  const parseQRData = (data) => {
-    const [firstName, lastName, ...rooms] = data.split(',');
-    return {
-      firstName,
-      lastName,
-      rooms: rooms.length ? rooms.map(Number) : 'all'
-    };
-  };
+            // Имитация работы с устройством сканирования
+            const mockExternalScannerData = {
+                scan: () => "John,Doe,1,3,4"
+            };
 
-  // Имитация сохранения в базу данных
-  const saveToDatabase = (userData) => {
-    console.log('Сохранение в общую таблицу participants:', {
-      first_name: userData.firstName,
-      last_name: userData.lastName,
-      rooms: userData.rooms
-    });
+            // Функция для разбора данных QR кода
+            const parseQRData = (data) => {
+                const [firstName, lastName, ...rooms] = data.split(',');
+                return {
+                    firstName,
+                    lastName,
+                    rooms: rooms.length ? rooms.map(Number) : 'all'
+                };
+            };
 
-    // Если у пользователя доступ ко всем комнатам
-    if (userData.rooms === 'all') {
-      console.log('Добавление пользователя во все таблицы rooms:');
-      [1, 2, 3, 4].forEach(roomId => {
-        console.log(`room_${roomId}:`, {
-          participant_id: `${userData.firstName}_${userData.lastName}`,
-          room_id: roomId
-        });
-      });
-    } else {
-      // Добавление только в указанные комнаты
-      console.log('Добавление пользователя в выбранные комнаты:');
-      userData.rooms.forEach(roomId => {
-        console.log(`room_${roomId}:`, {
-          participant_id: `${userData.firstName}_${userData.lastName}`,
-          room_id: roomId
-        });
-      });
-    }
-  };
+            // Имитация сохранения в базу данных
+            const saveToDatabase = (userData) => {
+                console.log('Сохранение в общую таблицу participants:', {
+                    first_name: userData.firstName,
+                    last_name: userData.lastName,
+                    rooms: userData.rooms
+                });
 
-  // Обработка данных от внешнего сканера
-  const handleExternalScan = () => {
-    try {
-      const scanData = mockExternalScannerData.scan();
-      const userData = parseQRData(scanData);
-      setScanResult(userData);
-      saveToDatabase(userData);
-    } catch (err) {
-      setError('Ошибка при сканировании внешним устройством');
-    }
-  };
+                if (userData.rooms === 'all') {
+                    console.log('Добавление пользователя во все таблицы rooms:');
+                    [1, 2, 3, 4].forEach(roomId => {
+                        console.log(`room_${roomId}:`, {
+                            participant_id: `${userData.firstName}_${userData.lastName}`,
+                            room_id: roomId
+                        });
+                    });
+                } else {
+                    console.log('Добавление пользователя в выбранные комнаты:');
+                    userData.rooms.forEach(roomId => {
+                        console.log(`room_${roomId}:`, {
+                            participant_id: `${userData.firstName}_${userData.lastName}`,
+                            room_id: roomId
+                        });
+                    });
+                }
+            };
 
-  // Имитация сканирования камерой телефона
-  const handleCameraScan = () => {
-    setIsCameraActive(true);
-    // Имитация получения данных с камеры
-    setTimeout(() => {
-      const mockCameraData = "Alice,Smith,2,3";
-      const userData = parseQRData(mockCameraData);
-      setScanResult(userData);
-      saveToDatabase(userData);
-      setIsCameraActive(false);
-    }, 2000);
-  };
+            // Обработка данных от внешнего сканера
+            const handleExternalScan = () => {
+                try {
+                    const scanData = mockExternalScannerData.scan();
+                    const userData = parseQRData(scanData);
+                    setScanResult(userData);
+                    saveToDatabase(userData);
+                } catch (err) {
+                    setError('Ошибка при сканировании внешним устройством');
+                }
+            };
 
-  return (
-    <div className="max-w-md mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>QR Сканер</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col gap-4">
-            <Button 
-              onClick={handleCameraScan}
-              disabled={isCameraActive}
-              className="flex items-center gap-2"
-            >
-              <Camera className="w-4 h-4" />
-              {isCameraActive ? 'Сканирование...' : 'Сканировать камерой'}
-            </Button>
-            
-            <Button 
-              onClick={handleExternalScan}
-              variant="outline"
-            >
-              Сканировать внешним устройством
-            </Button>
-          </div>
+            // Имитация сканирования камерой телефона
+            const handleCameraScan = async () => {
+                try {
+                    setIsCameraActive(true);
+                    // Запрашиваем доступ к камере
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    // В реальном приложении здесь будет код для сканирования QR-кода
+                    // Сейчас просто имитируем задержку и результат
+                    setTimeout(() => {
+                        stream.getTracks().forEach(track => track.stop()); // Останавливаем камеру
+                        const mockCameraData = "Alice,Smith,2,3";
+                        const userData = parseQRData(mockCameraData);
+                        setScanResult(userData);
+                        saveToDatabase(userData);
+                        setIsCameraActive(false);
+                    }, 2000);
+                } catch (err) {
+                    setError('Ошибка при доступе к камере');
+                    setIsCameraActive(false);
+                }
+            };
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            return (
+                <div className="max-w-md mx-auto p-4">
+                    <div className="card">
+                        <h2 className="text-2xl font-bold mb-4">QR Сканер</h2>
+                        
+                        <div className="space-y-4">
+                            <button 
+                                onClick={handleCameraScan}
+                                disabled={isCameraActive}
+                                className="button button-primary w-full"
+                            >
+                                {isCameraActive ? 'Сканирование...' : 'Сканировать камерой'}
+                            </button>
+                            
+                            <button 
+                                onClick={handleExternalScan}
+                                className="button button-outline w-full"
+                            >
+                                Сканировать внешним устройством
+                            </button>
+                        </div>
 
-          {scanResult && (
-            <div className="mt-4 p-4 border rounded-lg">
-              <h3 className="font-bold">Результат сканирования:</h3>
-              <p>Имя: {scanResult.firstName}</p>
-              <p>Фамилия: {scanResult.lastName}</p>
-              <p>Доступ к залам: {
-                scanResult.rooms === 'all' 
-                  ? 'Все залы' 
-                  : scanResult.rooms.join(', ')
-              }</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+                        {error && (
+                            <div className="alert mt-4">
+                                {error}
+                            </div>
+                        )}
 
-export default QRScanner;
+                        {scanResult && (
+                            <div className="mt-4 p-4 border rounded-lg">
+                                <h3 className="font-bold">Результат сканирования:</h3>
+                                <p>Имя: {scanResult.firstName}</p>
+                                <p>Фамилия: {scanResult.lastName}</p>
+                                <p>Доступ к залам: {
+                                    scanResult.rooms === 'all' 
+                                        ? 'Все залы' 
+                                        : scanResult.rooms.join(', ')
+                                }</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<QRScanner />);
+    </script>
+</body>
+</html>
