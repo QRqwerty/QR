@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Система регистрации посетителей</title>
+  <title>Система реєстрації відвідувачів</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -239,23 +239,23 @@
 </head>
 <body>
   <header>
-    <h1>Система регистрации посетителей</h1>
+    <h1>Система реєстрації відвідувачів</h1>
   </header>
 
   <div class="container">
     <div class="card registration-type">
-      <h2>Выберите тип регистрации</h2>
+      <h2>Оберіть тип реєстрації</h2>
       <div class="registration-options">
-        <div class="registration-option general-reg" id="general-registration">Общая регистрация</div>
-        <div class="registration-option hall-reg" id="hall-registration">Регистрация в зале</div>
+        <div class="registration-option general-reg" id="general-registration">Загальна реєстрація</div>
+        <div class="registration-option hall-reg" id="hall-registration">Реєстрація у залі</div>
       </div>
       <div class="current-mode-display" id="current-mode">
-        Выберите тип регистрации
+        Оберіть тип реєстрації
       </div>
     </div>
 
     <div class="card" id="hall-selection-card">
-      <h2>Выберите зал</h2>
+      <h2>Оберіть зал</h2>
       <div class="hall-selector" id="hall-selector">
         <div class="hall-button" data-hall="1">Зал 1</div>
         <div class="hall-button" data-hall="2">Зал 2</div>
@@ -263,12 +263,12 @@
         <div class="hall-button" data-hall="4">Зал 4</div>
         <div class="hall-button" data-hall="5">Зал 5</div>
       </div>
-      <div class="current-hall-display">Текущий зал: <span id="current-hall">не выбран</span></div>
+      <div class="current-hall-display">Поточний зал: <span id="current-hall">не обрано</span></div>
     </div>
 
     <div class="card">
-      <h2>Сканирование QR-кода</h2>
-      <button id="scan-button" disabled>Начать сканирование</button>
+      <h2>Сканування QR-коду</h2>
+      <button id="scan-button" disabled>Почати сканування</button>
       <div id="reader"></div>
       <div id="result"></div>
     </div>
@@ -338,7 +338,7 @@ window.addEventListener("load", () => {
     if (mode === 'general') {
       generalRegistrationBtn.classList.add('active');
       hallRegistrationBtn.classList.remove('active');
-      currentModeDisplay.textContent = 'Режим общей регистрации';
+      currentModeDisplay.textContent = 'Режим загальної реєстрації';
       currentModeDisplay.classList.add('general-registration-mode');
       hallSelectionCard.style.display = 'none';
       scanButton.classList.add('general');
@@ -346,7 +346,7 @@ window.addEventListener("load", () => {
     } else if (mode === 'hall') {
       generalRegistrationBtn.classList.remove('active');
       hallRegistrationBtn.classList.add('active');
-      currentModeDisplay.textContent = 'Режим регистрации в зале';
+      currentModeDisplay.textContent = 'Режим реєстрації у залі';
       currentModeDisplay.classList.remove('general-registration-mode');
       hallSelectionCard.style.display = 'block';
       scanButton.classList.remove('general');
@@ -354,7 +354,7 @@ window.addEventListener("load", () => {
     } else {
       generalRegistrationBtn.classList.remove('active');
       hallRegistrationBtn.classList.remove('active');
-      currentModeDisplay.textContent = 'Выберите тип регистрации';
+      currentModeDisplay.textContent = 'ВОберіть тип реєстрації';
       currentModeDisplay.classList.remove('general-registration-mode');
       hallSelectionCard.style.display = 'none';
       scanButton.classList.remove('general');
@@ -378,7 +378,7 @@ window.addEventListener("load", () => {
       }
     });
     
-    currentHallSpan.textContent = hall ? `Зал ${hall}` : 'не выбран';
+    currentHallSpan.textContent = hall ? `Зал ${hall}` : 'не обрано';
     
     // Разблокировка кнопки сканирования, если выбран зал и режим регистрации в зале
     if (registrationMode === 'hall') {
@@ -410,7 +410,7 @@ window.addEventListener("load", () => {
     const parts = qrData.split(',');
     
     if (parts.length < 1) {
-      throw new Error("Неверный формат QR-кода. Ожидается: 'ИмяФамилия,НомераЗалов'");
+      throw new Error("Невірний формат QR-коду. Очікується: 'Ім'яПрізвище,НомериЗалів'");
     }
     
     const fullName = parts[0].trim();
@@ -423,46 +423,46 @@ window.addEventListener("load", () => {
   function displayDebugInfo(info) {
     debugInfoDiv.style.display = "block";
     
-    let debugText = "=== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ===\n\n";
+    let debugText = "=== ОТЛАДОЧНА ІНФОРМАЦІЯ ===\n\n";
     
     // Информация о режиме регистрации
-    debugText += `📋 РЕЖИМ РЕГИСТРАЦИИ: ${info.mode === 'general' ? 'Общая регистрация' : 'Регистрация в зале'}\n\n`;
+    debugText += `📋 РЕЖИМ РЕЄСТРАЦІЇ: ${info.mode === 'general' ? 'Загальна реєстрація' : 'Реєстрація у залі'}\n\n`;
     
     // Информация о распарсенных данных
-    debugText += "📋 ДАННЫЕ ИЗ QR-КОДА:\n";
-    debugText += `👤 Имя Фамилия: ${info.parsedData.fullName}\n`;
-    debugText += `🏢 Номера залов: ${info.parsedData.hallNumbers.length > 0 ? info.parsedData.hallNumbers.join(', ') : 'не указаны'}\n\n`;
+    debugText += "📋 ДАНІ ІЗ QR-КОДУ:\n";
+    debugText += `👤 Імя Прізвище: ${info.parsedData.fullName}\n`;
+    debugText += `🏢 Номера залів: ${info.parsedData.hallNumbers.length > 0 ? info.parsedData.hallNumbers.join(', ') : 'не вказані'}\n\n`;
     
     if (info.mode === 'hall') {
-      debugText += `🏛️ Выбранный зал: ${selectedHall}\n\n`;
+      debugText += `🏛️ Обраний зал: ${selectedHall}\n\n`;
     }
     
     // Информация о времени
-    debugText += `⏱️ Время сканирования: ${new Date(info.timestamp).toLocaleString()}\n\n`;
+    debugText += `⏱️ Час сканування: ${new Date(info.timestamp).toLocaleString()}\n\n`;
     
     // Информация о операциях с БД
-    debugText += "💾 ОПЕРАЦИИ С БАЗОЙ ДАННЫХ:\n";
+    debugText += "💾 ОПЕРАЦІЇ З БД:\n";
     info.dbOperations.forEach((op, index) => {
       debugText += `${index + 1}. ${op.description}\n`;
       if (op.table) {
-        debugText += `   Таблица: ${op.table}\n`;
+        debugText += `   Таблиця: ${op.table}\n`;
       }
       if (op.operation) {
-        debugText += `   Операция: ${op.operation}\n`;
+        debugText += `   Операція: ${op.operation}\n`;
       }
       if (op.data) {
-        debugText += `   Данные: ${JSON.stringify(op.data)}\n`;
+        debugText += `   Дані: ${JSON.stringify(op.data)}\n`;
       }
       if (op.response) {
-        debugText += `   Ответ: ${JSON.stringify(op.response)}\n`;
+        debugText += `   Відповідь: ${JSON.stringify(op.response)}\n`;
       }
     });
     
     // Информация об ошибке, если есть
     if (info.error) {
-      debugText += `\n❌ ОШИБКА: ${info.error}\n`;
+      debugText += `\n❌ ПОМИЛКА: ${info.error}\n`;
     } else {
-      debugText += "\n✅ Операция успешно выполнена!\n";
+      debugText += "\n✅ Операція виконана успішно!\n";
     }
     
     debugInfoDiv.textContent = debugText;
@@ -538,7 +538,7 @@ window.addEventListener("load", () => {
       }]);
     
     dbOperations.push({
-      description: "Добавление пользователя в общую таблицу",
+      description: "Додавання користувача в загальну таблицю",
       table: "all_visitors",
       operation: "insert",
       data: { 
@@ -550,7 +550,7 @@ window.addEventListener("load", () => {
       response: { data, error }
     });
     
-    if (error) throw new Error(`Ошибка при регистрации пользователя: ${error.message}`);
+    if (error) throw new Error(`Помилка при реєстрації користувача: ${error.message}`);
     
     // Add user to each hall (without timestamps)
     const hallOperations = [];
@@ -565,7 +565,7 @@ window.addEventListener("load", () => {
         }]);
       
       dbOperations.push({
-        description: `Добавление пользователя в таблицу зала ${hall}`,
+        description: `Додавання користувача до таблиці залу ${hall}`,
         table: `hall_${hall}`,
         operation: "insert",
         data: { 
@@ -582,7 +582,7 @@ window.addEventListener("load", () => {
         error: hallError ? hallError.message : null
       });
       
-      if (hallError) console.warn(`Предупреждение: Не удалось добавить пользователя в зал ${hall}: ${hallError.message}`);
+      if (hallError) console.warn(`Попередження: Не вдалося додати користувача до зали ${hall}: ${hallError.message}`);
     }
     
     return { userId, data, error, timestamp, hallOperations, dbOperations };
@@ -602,7 +602,7 @@ window.addEventListener("load", () => {
         .single();
       
       dbOperations.push({
-        description: `Получение данных о посещениях пользователя в зале ${hall}`,
+        description: `Отримання даних о візитах користувача в залі ${hall}`,
         table: `hall_${hall}`,
         operation: "select",
         data: { id: userId },
@@ -611,7 +611,7 @@ window.addEventListener("load", () => {
       
       // Если произошла ошибка при получении данных
       if (fetchError) {
-        throw new Error(`Ошибка при получении данных пользователя: ${fetchError.message}`);
+        throw new Error(`Помилка при отриманні даних користувача: ${fetchError.message}`);
       }
       
       // 2. Подготавливаем массив временных меток
@@ -628,12 +628,12 @@ window.addEventListener("load", () => {
       // 3. Добавляем новую временную метку
       timestamps.push(timestamp);
       
-      console.log(`Обновление visit_timestamps для пользователя ${fullName} в зале ${hall}`);
-      console.log(`Текущие timestamps:`, timestamps);
+      console.log(`Оновлення visit_timestamps для користувача ${fullName} в залі ${hall}`);
+      console.log(`Поточні timestamps:`, timestamps);
 
-      console.log("Текущие данные пользователя:", userData);
-console.log("Тип данных visit_timestamps:", typeof userData.visit_timestamps);
-console.log("Значение visit_timestamps:", userData.visit_timestamps);
+      console.log("Поточні дані користувача:", userData);
+console.log("Тип даних visit_timestamps:", typeof userData.visit_timestamps);
+console.log("Значення visit_timestamps:", userData.visit_timestamps);
       
       // 4. Обновляем запись в БД с новым массивом временных меток
       const { data: updateData, error: updateError } = await supabase
@@ -643,7 +643,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
         .select();
       
       dbOperations.push({
-        description: `Обновление временных меток посещений пользователя в зале ${hall}`,
+        description: `Оновлення visit_timestamps візітів користувача в залі ${hall}`,
         table: `hall_${hall}`,
         operation: "update",
         data: { 
@@ -655,7 +655,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       
       // Если произошла ошибка при обновлении
       if (updateError) {
-        throw new Error(`Ошибка при обновлении данных: ${updateError.message}`);
+        throw new Error(`Помилка при оновленні даних: ${updateError.message}`);
       }
       
       // 5. Возвращаем результаты
@@ -669,10 +669,10 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       };
       
     } catch (error) {
-      console.error("Ошибка в addHallVisit:", error);
+      console.error("Помилка в addHallVisit:", error);
       
       dbOperations.push({
-        description: `Ошибка при обновлении посещений в зале ${hall}`,
+        description: `Помилка при оновленні візитів в залі ${hall}`,
         table: `hall_${hall}`,
         operation: "error",
         data: { error: error.message }
@@ -701,7 +701,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       const { exists: userExists, data: userData, error: userCheckError } = await checkUserExists(fullName);
       
       debugInfo.dbOperations.push({
-        description: "Проверка существования пользователя",
+        description: "Перевірка існування користувача",
         table: "all_visitors",
         operation: "select",
         data: { full_name: fullName },
@@ -709,7 +709,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       });
       
       if (userCheckError && userCheckError.code !== 'PGRST116') { // Not PGRST116 means real error, not just "not found"
-        throw new Error(`Ошибка при проверке пользователя: ${userCheckError.message}`);
+        throw new Error(`Помилка при перевірці користувача: ${userCheckError.message}`);
       }
       
       // If user doesn't exist, register them
@@ -722,7 +722,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
         return { ...debugInfo, isNewRegistration: true };
       } else {
         debugInfo.dbOperations.push({
-          description: "Пользователь уже зарегистрирован в системе",
+          description: "Користувач вже зареєстрован у системі",
           table: "all_visitors",
           operation: "info",
           data: { id: userData.id, full_name: fullName, registration_time: userData.registration_time, hall_numbers: userData.hall_numbers }
@@ -731,7 +731,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
         return { ...debugInfo, isNewRegistration: false };
       }
     } catch (error) {
-      console.error("Ошибка:", error);
+      console.error("Помилка:", error);
       debugInfo.error = error.message;
       return debugInfo;
     }
@@ -745,7 +745,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
         parsedData: { fullName: '', hallNumbers: [] },
         dbOperations: [],
         timestamp: new Date().toISOString(),
-        error: "Не выбран зал для регистрации посещения"
+        error: "Не обран зал для реєстрації візиту"
       };
     }
     
@@ -766,7 +766,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       const { exists: userExists, data: userData, error: userCheckError } = await checkUserExists(fullName);
       
       debugInfo.dbOperations.push({
-        description: "Проверка существования пользователя",
+        description: "Перевірка існування користувача",
         table: "all_visitors",
         operation: "select",
         data: { full_name: fullName },
@@ -774,21 +774,21 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       });
       
       if (userCheckError && userCheckError.code !== 'PGRST116') {
-        throw new Error(`Ошибка при проверке пользователя: ${userCheckError.message}`);
+        throw new Error(`Помилка при перевірці користувача: ${userCheckError.message}`);
       }
       
       // Если пользователь не существует, возвращаем ошибку
       if (!userExists) {
-        throw new Error(`Пользователь ${fullName} не зарегистрирован в системе`);
+        throw new Error(`Користувач ${fullName} не зареєстрован у системі`);
       }
       
       // Пользователь существует, проверяем, разрешен ли ему доступ в этот зал
       if (!isHallAllowed(userData.hall_numbers, selectedHall)) {
-        throw new Error(`Пользователь ${fullName} не зарегистрирован в зал ${selectedHall}`);
+        throw new Error(`Користувач ${fullName} не зареєстрован до зали ${selectedHall}`);
       }
       
       debugInfo.dbOperations.push({
-        description: "Пользователь найден в системе",
+        description: "Користувач найден у системі",
         table: "all_visitors",
         operation: "info",
         data: { id: userData.id, full_name: fullName, registration_time: userData.registration_time, hall_numbers: userData.hall_numbers }
@@ -804,8 +804,8 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
         
         debugInfo.dbOperations.push({
           description: isFirstVisit 
-            ? `Первое посещение пользователем зала ${selectedHall}` 
-            : `Добавлено новое посещение пользователем зала ${selectedHall} (всего: ${visitsCount})`,
+            ? `Добавлено перший візит користувача зали ${selectedHall}` 
+            : `Добавлено новий візит користувача зали ${selectedHall} (усього: ${visitsCount})`,
           table: `hall_${selectedHall}`,
           operation: "info",
           data: { full_name: fullName, visit_time: visitTimestamp, visits_count: visitsCount }
@@ -816,7 +816,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
         throw visitError;
       }
     } catch (error) {
-      console.error("Ошибка:", error);
+      console.error("Помилка:", error);
       debugInfo.error = error.message;
       return debugInfo;
     }
@@ -825,12 +825,12 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
   // Обработчик кнопки сканирования
   scanButton.addEventListener("click", () => {
     if (registrationMode === 'hall' && !selectedHall) {
-      showStatusMessage("Выберите зал перед сканированием", false);
+      showStatusMessage("Оберіть залу перед скануванням", false);
       return;
     }
     
     if (!registrationMode) {
-      showStatusMessage("Выберите режим регистрации", false);
+      showStatusMessage("Оберіть режим реєстрації", false);
       return;
     }
     
@@ -846,7 +846,7 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
       config,
       async qrCodeMessage => {
         await html5QrCode.stop();
-        resultDiv.innerHTML = `<h3>Сканированный QR-код:</h3><p>${qrCodeMessage}</p>`;
+        resultDiv.innerHTML = `<h3>Сканований QR-код:</h3><p>${qrCodeMessage}</p>`;
         
         try {
           let debugInfo;
@@ -857,12 +857,12 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
             
             // Отображаем сообщение об успехе или ошибке
             if (debugInfo.error) {
-              showStatusMessage(`Ошибка: ${debugInfo.error}`, false);
+              showStatusMessage(`Помилка: ${debugInfo.error}`, false);
             } else {
               showStatusMessage(
                 debugInfo.isNewRegistration 
-                  ? `Пользователь ${debugInfo.parsedData.fullName} успешно зарегистрирован` 
-                  : `Пользователь ${debugInfo.parsedData.fullName} уже зарегистрирован в системе`, 
+                  ? `Користувач ${debugInfo.parsedData.fullName} успішно зареєстрован` 
+                  : `Користувач ${debugInfo.parsedData.fullName} вже зареєстрован у системі`, 
                 true
               );
             }
@@ -871,12 +871,12 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
             
             // Отображаем сообщение об успехе или ошибке
             if (debugInfo.error) {
-              showStatusMessage(`Ошибка: ${debugInfo.error}`, false);
+              showStatusMessage(`Помилка: ${debugInfo.error}`, false);
             } else {
               showStatusMessage(
                 debugInfo.isFirstVisit 
-                  ? `Первое посещение зала ${selectedHall} пользователем ${debugInfo.parsedData.fullName}` 
-                  : `Посещение зала ${selectedHall} пользователем ${debugInfo.parsedData.fullName} успешно зафиксировано`, 
+                  ? `Перший візит зали ${selectedHall} користувачем ${debugInfo.parsedData.fullName}` 
+                  : `Візит зали ${selectedHall} користувачем ${debugInfo.parsedData.fullName} успішно зафіксовано`, 
                 true
               );
             }
@@ -886,27 +886,27 @@ console.log("Значение visit_timestamps:", userData.visit_timestamps);
           displayDebugInfo(debugInfo);
           
         } catch (err) {
-          console.error("Ошибка:", err);
+          console.error("Помилка:", err);
           
           // Отображаем информацию об ошибке
           displayDebugInfo({
             mode: registrationMode,
-            parsedData: { fullName: 'Ошибка парсинга', hallNumbers: [] },
+            parsedData: { fullName: 'Помилка парсингу', hallNumbers: [] },
             dbOperations: [],
             timestamp: new Date().toISOString(),
             error: err.message
           });
           
-          showStatusMessage(`Ошибка: ${err.message}`, false);
+          showStatusMessage(`Помилка: ${err.message}`, false);
         }
       },
       errorMessage => {
-        console.log("Ошибка сканирования:", errorMessage);
+        console.log("Помилка сканування:", errorMessage);
       }
     ).catch(err => {
-      console.error("Ошибка запуска сканера:", err);
-      resultDiv.innerHTML = `<h3>Ошибка</h3><p>Не удалось запустить сканер: ${err.message}</p>`;
-      showStatusMessage(`Не удалось запустить сканер: ${err.message}`, false);
+      console.error("Помилка запуску сканеру:", err);
+      resultDiv.innerHTML = `<h3>Ошибка</h3><p>Не вдалося запустити сканер: ${err.message}</p>`;
+      showStatusMessage(`Не вдалося запустити сканер: ${err.message}`, false);
     });
   });
   
