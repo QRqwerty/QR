@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Система регистрации посетителей</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2980b9;
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+      --background-color: #f8f9fa;
+      --card-background: #ffffff;
+      --text-color: #333333;
+      --border-color: #e0e0e0;
+      --general-registration-color: #9b59b6;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .card {
+      background-color: var(--card-background);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .registration-type {
+      margin-bottom: 20px;
+    }
+
+    .registration-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .registration-option {
+      flex: 1;
+      min-width: 120px;
+      padding: 15px 10px;
+      background-color: var(--card-background);
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .registration-option.general-reg {
+      background-color: var(--general-registration-color);
+      color: white;
+    }
+
+    .registration-option.general-reg.active {
+      background-color: #8e44ad;
+      box-shadow: 0 0 10px rgba(142, 68, 173, 0.5);
+    }
+
+    .registration-option.hall-reg {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .registration-option.hall-reg.active {
+      background-color: var(--secondary-color);
+      box-shadow: 0 0 10px rgba(41, 128, 185, 0.5);
+    }
+
+    .hall-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      transition: opacity 0.3s ease;
+    }
+
+    .hall-selector.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .hall-button {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px;
+      background-color: var(--card-background);
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .hall-button.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--secondary-color);
+    }
+
+    #reader {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    #scan-button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    #scan-button.general {
+      background-color: var(--general-registration-color);
+    }
+
+    #scan-button.general:hover {
+      background-color: #8e44ad;
+    }
+
+    #scan-button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    #scan-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 20px;
+    }
+
+    .status-message {
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .success {
+      background-color: rgba(46, 204, 113, 0.2);
+      color: #27ae60;
+      border-left: 4px solid #27ae60;
+    }
+
+    .error {
+      background-color: rgba(231, 76, 60, 0.2);
+      color: #c0392b;
+      border-left: 4px solid #c0392b;
+    }
+
+    #debug-info {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      width: 100%;
+      background-color: #f9f9f9;
+      white-space: pre-wrap;
+      font-family: monospace;
+      display: none;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .current-mode-display {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .general-registration-mode {
+      color: var(--general-registration-color);
+    }
+
+    @media (max-width: 600px) {
+      .hall-selector {
+        flex-direction: row;
+      }
+      
+      .hall-button {
+        flex: 0 0 calc(20% - 10px);
+      }
+      
+      .registration-options {
+        flex-direction: column;
+      }
+      
+      .registration-option {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Система регистрации посетителей</h1>
+  </header>
+
+  <div class="container">
+    <div class="card registration-type">
+      <h2>Выберите тип регистрации</h2>
+      <div class="registration-options">
+        <div class="registration-option general-reg" id="general-registration">Общая регистрация</div>
+        <div class="registration-option hall-reg" id="hall-registration">Регистрация в зале</div>
+      </div>
+      <div class="current-mode-display" id="current-mode">
+        Выберите тип регистрации
+      </div>
+    </div>
+
+    <div class="card" id="hall-selection-card">
+      <h2>Выберите зал</h2>
+      <div class="hall-selector" id="hall-selector">
+        <div class="hall-button" data-hall="1">Зал 1</div>
+        <div class="hall-button" data-hall="2">Зал 2</div>
+        <div class="hall-button" data-hall="3">Зал 3</div>
+        <div class="hall-button" data-hall="4">Зал 4</div>
+        <div class="hall-button" data-hall="5">Зал 5</div>
+      </div>
+      <div class="current-hall-display">Текущий зал: <span id="current-hall">не выбран</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Сканирование QR-кода</h2>
+      <button id="scan-button" disabled>Начать сканирование</button>
+      <div id="reader"></div>
+      <div id="result"></div>
+    </div>
+
+    <div id="debug-info"></div>
+  </div>
+  
+  <script>
+window.addEventListener("load", () => {
+  const SUPABASE_URL = 'https://jkvogvnbedjptqnhhehs.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imprdm9ndm5iZWRqcHRxbmhoZWhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0ODc1NjQsImV4cCI6MjA1NjA2MzU2NH0.6eqFSmqvZ2qL-9ZG6GE9A4_ALnIVsRKCvtMuObfv2n8';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  const scanButton = document.getElementById("scan-button");
+  const resultDiv = document.getElementById("result");
+  const debugInfoDiv = document.getElementById("debug-info");
+  const currentHallSpan = document.getElementById("current-hall");
+  const hallButtons = document.querySelectorAll(".hall-button");
+  const generalRegistrationBtn = document.getElementById("general-registration");
+  const hallRegistrationBtn = document.getElementById("hall-registration");
+  const currentModeDisplay = document.getElementById("current-mode");
+  const hallSelectionCard = document.getElementById("hall-selection-card");
+  const hallSelector = document.getElementById("hall-selector");
+  
+  let selectedHall = null;
+  let registrationMode = null; // 'general' или 'hall'
+  let html5QrCode;
+  
+  // Обновление URL при изменении режима и выбранного зала
+  function updateURL(mode, hall) {
+    const params = new URLSearchParams();
+    
+    if (mode) {
+      params.set('mode', mode);
+      
+      if (mode === 'hall' && hall) {
+        params.set('hall', hall);
+      }
+    }
+    
+    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    history.pushState({mode: mode, hall: hall}, '', newUrl);
+  }
+  
+  // Инициализация режима и зала из URL при загрузке
+  function initFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const modeParam = urlParams.get('mode');
+    const hallParam = urlParams.get('hall');
+    
+    if (modeParam === 'general') {
+      setRegistrationMode('general');
+    } else if (modeParam === 'hall') {
+      setRegistrationMode('hall');
+      
+      if (hallParam && ['1', '2', '3', '4', '5'].includes(hallParam)) {
+        selectHall(hallParam);
+      }
+    }
+  }
+  
+  // Установка режима регистрации
+  function setRegistrationMode(mode) {
+    registrationMode = mode;
+    
+    // Обновление UI для кнопок режима
+    if (mode === 'general') {
+      generalRegistrationBtn.classList.add('active');
+      hallRegistrationBtn.classList.remove('active');
+      currentModeDisplay.textContent = 'Режим общей регистрации';
+      currentModeDisplay.classList.add('general-registration-mode');
+      hallSelectionCard.style.display = 'none';
+      scanButton.classList.add('general');
+      scanButton.disabled = false;
+    } else if (mode === 'hall') {
+      generalRegistrationBtn.classList.remove('active');
+      hallRegistrationBtn.classList.add('active');
+      currentModeDisplay.textContent = 'Режим регистрации в зале';
+      currentModeDisplay.classList.remove('general-registration-mode');
+      hallSelectionCard.style.display = 'block';
+      scanButton.classList.remove('general');
+      scanButton.disabled = !selectedHall;
+    } else {
+      generalRegistrationBtn.classList.remove('active');
+      hallRegistrationBtn.classList.remove('active');
+      currentModeDisplay.textContent = 'Выберите тип регистрации';
+      currentModeDisplay.classList.remove('general-registration-mode');
+      hallSelectionCard.style.display = 'none';
+      scanButton.classList.remove('general');
+      scanButton.disabled = true;
+    }
+    
+    // Обновление URL
+    updateURL(mode, selectedHall);
+  }
+  
+  // Выбор зала
+  function selectHall(hall) {
+    selectedHall = hall;
+    
+    // Обновление UI для залов
+    hallButtons.forEach(btn => {
+      if (btn.dataset.hall === hall) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    
+    currentHallSpan.textContent = hall ? `Зал ${hall}` : 'не выбран';
+    
+    // Разблокировка кнопки сканирования, если выбран зал и режим регистрации в зале
+    if (registrationMode === 'hall') {
+      scanButton.disabled = !hall;
+    }
+    
+    // Обновление URL
+    updateURL(registrationMode, hall);
+  }
+  
+  // Обработчики для кнопок выбора режима
+  generalRegistrationBtn.addEventListener('click', () => {
+    setRegistrationMode('general');
+  });
+  
+  hallRegistrationBtn.addEventListener('click', () => {
+    setRegistrationMode('hall');
+  });
+  
+  // Прослушиватели событий для кнопок выбора зала
+  hallButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectHall(btn.dataset.hall);
+    });
+  });
+  
+  // Функция для парсинга данных из QR кода
+  function parseQRData(qrData) {
+    const parts = qrData.split(',');
+    
+    if (parts.length < 1) {
+      throw new Error("Неверный формат QR-кода. Ожидается: 'ИмяФамилия,НомераЗалов'");
+    }
+    
+    const fullName = parts[0].trim();
+    const hallNumbers = parts.length > 1 ? parts[1].trim().split('') : [];
+    
+    return { fullName, hallNumbers };
+  }
+  
+  // Функция для отображения отладочной информации
+  function displayDebugInfo(info) {
+    debugInfoDiv.style.display = "block";
+    
+    let debugText = "=== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ===\n\n";
+    
+    // Информация о режиме регистрации
+    debugText += `📋 РЕЖИМ РЕГИСТРАЦИИ: ${info.mode === 'general' ? 'Общая регистрация' : 'Регистрация в зале'}\n\n`;
+    
+    // Информация о распарсенных данных
+    debugText += "📋 ДАННЫЕ ИЗ QR-КОДА:\n";
+    debugText += `👤 Имя Фамилия: ${info.parsedData.fullName}\n`;
+    debugText += `🏢 Номера залов: ${info.parsedData.hallNumbers.length > 0 ? info.parsedData.hallNumbers.join(', ') : 'не указаны'}\n\n`;
+    
+    if (info.mode === 'hall') {
+      debugText += `🏛️ Выбранный зал: ${selectedHall}\n\n`;
+    }
+    
+    // Информация о времени
+    debugText += `⏱️ Время сканирования: ${new Date(info.timestamp).toLocaleString()}\n\n`;
+    
+    // Информация о операциях с БД
+    debugText += "💾 ОПЕРАЦИИ С БАЗОЙ ДАННЫХ:\n";
+    info.dbOperations.forEach((op, index) => {
+      debugText += `${index + 1}. ${op.description}\n`;
+      if (op.table) {
+        debugText += `   Таблица: ${op.table}\n`;
+      }
+      if (op.operation) {
+        debugText += `   Операция: ${op.operation}\n`;
+      }
+      if (op.data) {
+        debugText += `   Данные: ${JSON.stringify(op.data)}\n`;
+      }
+      if (op.response) {
+        debugText += `   Ответ: ${JSON.stringify(op.response)}\n`;
+      }
+    });
+    
+    // Информация об ошибке, если есть
+    if (info.error) {
+      debugText += `\n❌ ОШИБКА: ${info.error}\n`;
+    } else {
+      debugText += "\n✅ Операция успешно выполнена!\n";
+    }
+    
+    debugInfoDiv.textContent = debugText;
+  }
+  
+  // Функция для отображения сообщения о статусе
+  function showStatusMessage(message, isSuccess = true) {
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `status-message ${isSuccess ? 'success' : 'error'}`;
+    statusDiv.textContent = message;
+    
+    resultDiv.appendChild(statusDiv);
+    
+    // Автоматическое удаление сообщения через 5 секунд
+    setTimeout(() => {
+      statusDiv.remove();
+    }, 5000);
+  }
+  
+  // Проверка существования пользователя в общей таблице
+  async function checkUserExists(fullName) {
+    const { data, error } = await supabase
+      .from('all_visitors')
+      .select('id, full_name, registration_time, hall_numbers')
+      .eq('full_name', fullName)
+      .single();
+    
+    return { exists: !!data, data, error };
+  }
+  
+  function isHallAllowed(hallNumbersString, hallNumber) {
+    // If no halls specified (empty string), all halls are allowed
+    if (!hallNumbersString || hallNumbersString.trim() === '') {
+      return true;
+    }
+    
+    // Check if the hall is in the user's allowed halls
+    const hallNumbers = hallNumbersString.split(/,\s*/);
+    return hallNumbers.includes(hallNumber.toString());
+  }
+  
+  // Проверка посещения пользователем конкретного зала
+  async function checkHallVisit(userId, hall) {
+    const { data, error } = await supabase
+      .from(`hall_${hall}`)
+      .select('id, full_name, visit_timestamps')
+      .eq('id', userId)
+      .single();
+    
+    return { exists: !!data, data, error };
+  }
+  
+  // Регистрация нового пользователя в общей таблице
+  async function registerNewUser(fullName, hallNumbers) {
+    // Generate a consistent UUID for the user
+    const userId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+    
+    // If no halls specified, allow all halls (1-5)
+    const hallNumbersToUse = hallNumbers.length > 0 ? hallNumbers : ['1', '2', '3', '4', '5'];
+    const hallNumbersString = hallNumbersToUse.join(", ");
+    
+    const dbOperations = [];
+    
+    // Insert into general table
+    const { data, error } = await supabase
+      .from('all_visitors')
+      .insert([{ 
+        id: userId,
+        full_name: fullName, 
+        hall_numbers: hallNumbersString,
+        registration_time: timestamp
+      }]);
+    
+    dbOperations.push({
+      description: "Добавление пользователя в общую таблицу",
+      table: "all_visitors",
+      operation: "insert",
+      data: { 
+        id: userId,
+        full_name: fullName, 
+        hall_numbers: hallNumbersString,
+        registration_time: timestamp
+      },
+      response: { data, error }
+    });
+    
+    if (error) throw new Error(`Ошибка при регистрации пользователя: ${error.message}`);
+    
+    // Add user to each hall (without timestamps)
+    const hallOperations = [];
+    
+    for (const hall of hallNumbersToUse) {
+      const { data: hallData, error: hallError } = await supabase
+        .from(`hall_${hall}`)
+        .insert([{ 
+          id: userId,
+          full_name: fullName,
+          visit_timestamps: []
+        }]);
+      
+      dbOperations.push({
+        description: `Добавление пользователя в таблицу зала ${hall}`,
+        table: `hall_${hall}`,
+        operation: "insert",
+        data: { 
+          id: userId,
+          full_name: fullName,
+          visit_timestamps: []
+        },
+        response: { data: hallData, error: hallError }
+      });
+      
+      hallOperations.push({
+        hall: hall,
+        success: !hallError,
+        error: hallError ? hallError.message : null
+      });
+      
+      if (hallError) console.warn(`Предупреждение: Не удалось добавить пользователя в зал ${hall}: ${hallError.message}`);
+    }
+    
+    return { userId, data, error, timestamp, hallOperations, dbOperations };
+  }
+  
+  // функция добавления посещения зала
+  async function addHallVisit(userId, fullName, hall) {
+    const timestamp = new Date().toISOString();
+    const dbOperations = [];
+    
+    try {
+      // 1. Получаем текущую запись пользователя из таблицы зала
+      const { data: userData, error: fetchError } = await supabase
+        .from(`hall_${hall}`)
+        .select('visit_timestamps')
+        .eq('id', userId)
+        .single();
+      
+      dbOperations.push({
+        description: `Получение данных о посещениях пользователя в зале ${hall}`,
+        table: `hall_${hall}`,
+        operation: "select",
+        data: { id: userId },
+        response: { data: userData, error: fetchError }
+      });
+      
+      // Если произошла ошибка при получении данных
+      if (fetchError) {
+        throw new Error(`Ошибка при получении данных пользователя: ${fetchError.message}`);
+      }
+      
+      // 2. Подготавливаем массив временных меток
+      let timestamps = [];
+      
+      // Если уже есть временные метки, используем их
+      if (userData && userData.visit_timestamps) {
+        // Убедимся, что работаем с массивом
+        timestamps = Array.isArray(userData.visit_timestamps) 
+          ? [...userData.visit_timestamps] 
+          : [];
+      }
+      
+      // 3. Добавляем новую временную метку
+      timestamps.push(timestamp);
+      
+      console.log(`Обновление visit_timestamps для пользователя ${fullName} в зале ${hall}`);
+      console.log(`Текущие timestamps:`, timestamps);
+
+      console.log("Текущие данные пользователя:", userData);
+console.log("Тип данных visit_timestamps:", typeof userData.visit_timestamps);
+console.log("Значение visit_timestamps:", userData.visit_timestamps);
+      
+      // 4. Обновляем запись в БД с новым массивом временных меток
+      const { data: updateData, error: updateError } = await supabase
+        .from(`hall_${hall}`)
+        .update({ visit_timestamps: timestamps })
+        .eq('id', userId)
+        .select();
+      
+      dbOperations.push({
+        description: `Обновление временных меток посещений пользователя в зале ${hall}`,
+        table: `hall_${hall}`,
+        operation: "update",
+        data: { 
+          id: userId, 
+          visit_timestamps: timestamps 
+        },
+        response: { data: updateData, error: updateError }
+      });
+      
+      // Если произошла ошибка при обновлении
+      if (updateError) {
+        throw new Error(`Ошибка при обновлении данных: ${updateError.message}`);
+      }
+      
+      // 5. Возвращаем результаты
+      return {
+        success: true,
+        data: updateData,
+        timestamp,
+        isFirstVisit: timestamps.length === 1,
+        visitsCount: timestamps.length,
+        dbOperations
+      };
+      
+    } catch (error) {
+      console.error("Ошибка в addHallVisit:", error);
+      
+      dbOperations.push({
+        description: `Ошибка при обновлении посещений в зале ${hall}`,
+        table: `hall_${hall}`,
+        operation: "error",
+        data: { error: error.message }
+      });
+      
+      throw error;
+    }
+  }
+  
+  // Функция обработки для общей регистрации
+  async function processGeneralRegistration(qrData) {
+    const timestamp = new Date().toISOString();
+    const debugInfo = {
+      mode: 'general',
+      parsedData: {},
+      dbOperations: [],
+      timestamp
+    };
+    
+    try {
+      // Parse QR code data
+      const { fullName, hallNumbers } = parseQRData(qrData);
+      debugInfo.parsedData = { fullName, hallNumbers };
+      
+      // Check if user exists
+      const { exists: userExists, data: userData, error: userCheckError } = await checkUserExists(fullName);
+      
+      debugInfo.dbOperations.push({
+        description: "Проверка существования пользователя",
+        table: "all_visitors",
+        operation: "select",
+        data: { full_name: fullName },
+        response: { exists: userExists, data: userData, error: userCheckError }
+      });
+      
+      if (userCheckError && userCheckError.code !== 'PGRST116') { // Not PGRST116 means real error, not just "not found"
+        throw new Error(`Ошибка при проверке пользователя: ${userCheckError.message}`);
+      }
+      
+      // If user doesn't exist, register them
+      if (!userExists) {
+        const { userId, dbOperations: registerOperations } = await registerNewUser(fullName, hallNumbers);
+        
+        // Добавляем операции из registerNewUser в основной массив операций
+        debugInfo.dbOperations = [...debugInfo.dbOperations, ...registerOperations];
+        
+        return { ...debugInfo, isNewRegistration: true };
+      } else {
+        debugInfo.dbOperations.push({
+          description: "Пользователь уже зарегистрирован в системе",
+          table: "all_visitors",
+          operation: "info",
+          data: { id: userData.id, full_name: fullName, registration_time: userData.registration_time, hall_numbers: userData.hall_numbers }
+        });
+        
+        return { ...debugInfo, isNewRegistration: false };
+      }
+    } catch (error) {
+      console.error("Ошибка:", error);
+      debugInfo.error = error.message;
+      return debugInfo;
+    }
+  }
+  
+  // Функция обработки для регистрации в зале
+  async function processHallRegistration(qrData) {
+    if (!selectedHall) {
+      return {
+        mode: 'hall',
+        parsedData: { fullName: '', hallNumbers: [] },
+        dbOperations: [],
+        timestamp: new Date().toISOString(),
+        error: "Не выбран зал для регистрации посещения"
+      };
+    }
+    
+    const timestamp = new Date().toISOString();
+    const debugInfo = {
+      mode: 'hall',
+      parsedData: {},
+      dbOperations: [],
+      timestamp
+    };
+    
+    try {
+      // Parse QR code data
+      const { fullName, hallNumbers } = parseQRData(qrData);
+      debugInfo.parsedData = { fullName, hallNumbers };
+      
+      // Проверяем, существует ли пользователь в общей таблице
+      const { exists: userExists, data: userData, error: userCheckError } = await checkUserExists(fullName);
+      
+      debugInfo.dbOperations.push({
+        description: "Проверка существования пользователя",
+        table: "all_visitors",
+        operation: "select",
+        data: { full_name: fullName },
+        response: { exists: userExists, data: userData, error: userCheckError }
+      });
+      
+      if (userCheckError && userCheckError.code !== 'PGRST116') {
+        throw new Error(`Ошибка при проверке пользователя: ${userCheckError.message}`);
+      }
+      
+      // Если пользователь не существует, возвращаем ошибку
+      if (!userExists) {
+        throw new Error(`Пользователь ${fullName} не зарегистрирован в системе`);
+      }
+      
+      // Пользователь существует, проверяем, разрешен ли ему доступ в этот зал
+      if (!isHallAllowed(userData.hall_numbers, selectedHall)) {
+        throw new Error(`Пользователь ${fullName} не зарегистрирован в зал ${selectedHall}`);
+      }
+      
+      debugInfo.dbOperations.push({
+        description: "Пользователь найден в системе",
+        table: "all_visitors",
+        operation: "info",
+        data: { id: userData.id, full_name: fullName, registration_time: userData.registration_time, hall_numbers: userData.hall_numbers }
+      });
+      
+      // Проверяем запись пользователя в таблице зала и добавляем новое посещение
+      try {
+        const { isFirstVisit, visitsCount, timestamp: visitTimestamp, dbOperations: visitOperations } = 
+          await addHallVisit(userData.id, fullName, selectedHall);
+        
+        // Добавляем операции из addHallVisit в основной массив операций
+        debugInfo.dbOperations = [...debugInfo.dbOperations, ...visitOperations];
+        
+        debugInfo.dbOperations.push({
+          description: isFirstVisit 
+            ? `Первое посещение пользователем зала ${selectedHall}` 
+            : `Добавлено новое посещение пользователем зала ${selectedHall} (всего: ${visitsCount})`,
+          table: `hall_${selectedHall}`,
+          operation: "info",
+          data: { full_name: fullName, visit_time: visitTimestamp, visits_count: visitsCount }
+        });
+        
+        return { ...debugInfo, isFirstVisit, newRegistration: false };
+      } catch (visitError) {
+        throw visitError;
+      }
+    } catch (error) {
+      console.error("Ошибка:", error);
+      debugInfo.error = error.message;
+      return debugInfo;
+    }
+  }
+  
+  // Обработчик кнопки сканирования
+  scanButton.addEventListener("click", () => {
+    if (registrationMode === 'hall' && !selectedHall) {
+      showStatusMessage("Выберите зал перед сканированием", false);
+      return;
+    }
+    
+    if (!registrationMode) {
+      showStatusMessage("Выберите режим регистрации", false);
+      return;
+    }
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    const readerElementId = "reader";
+    
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode(readerElementId);
+    }
+    
+    html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      async qrCodeMessage => {
+        await html5QrCode.stop();
+        resultDiv.innerHTML = `<h3>Сканированный QR-код:</h3><p>${qrCodeMessage}</p>`;
+        
+        try {
+          let debugInfo;
+          
+          // В зависимости от режима, обрабатываем QR-код
+          if (registrationMode === 'general') {
+            debugInfo = await processGeneralRegistration(qrCodeMessage);
+            
+            // Отображаем сообщение об успехе или ошибке
+            if (debugInfo.error) {
+              showStatusMessage(`Ошибка: ${debugInfo.error}`, false);
+            } else {
+              showStatusMessage(
+                debugInfo.isNewRegistration 
+                  ? `Пользователь ${debugInfo.parsedData.fullName} успешно зарегистрирован` 
+                  : `Пользователь ${debugInfo.parsedData.fullName} уже зарегистрирован в системе`, 
+                true
+              );
+            }
+          } else if (registrationMode === 'hall') {
+            debugInfo = await processHallRegistration(qrCodeMessage);
+            
+            // Отображаем сообщение об успехе или ошибке
+            if (debugInfo.error) {
+              showStatusMessage(`Ошибка: ${debugInfo.error}`, false);
+            } else {
+              showStatusMessage(
+                debugInfo.isFirstVisit 
+                  ? `Первое посещение зала ${selectedHall} пользователем ${debugInfo.parsedData.fullName}` 
+                  : `Посещение зала ${selectedHall} пользователем ${debugInfo.parsedData.fullName} успешно зафиксировано`, 
+                true
+              );
+            }
+          }
+          
+          // Отображаем отладочную информацию
+          displayDebugInfo(debugInfo);
+          
+        } catch (err) {
+          console.error("Ошибка:", err);
+          
+          // Отображаем информацию об ошибке
+          displayDebugInfo({
+            mode: registrationMode,
+            parsedData: { fullName: 'Ошибка парсинга', hallNumbers: [] },
+            dbOperations: [],
+            timestamp: new Date().toISOString(),
+            error: err.message
+          });
+          
+          showStatusMessage(`Ошибка: ${err.message}`, false);
+        }
+      },
+      errorMessage => {
+        console.log("Ошибка сканирования:", errorMessage);
+      }
+    ).catch(err => {
+      console.error("Ошибка запуска сканера:", err);
+      resultDiv.innerHTML = `<h3>Ошибка</h3><p>Не удалось запустить сканер: ${err.message}</p>`;
+      showStatusMessage(`Не удалось запустить сканер: ${err.message}`, false);
+    });
+  });
+  
+  // Инициализация из URL при загрузке страницы
+  initFromURL();
+  
+  // Обработка навигации по истории браузера (кнопки назад/вперед)
+  window.addEventListener('popstate', (event) => {
+    if (event.state) {
+      if (event.state.mode) {
+        setRegistrationMode(event.state.mode);
+      }
+      if (event.state.hall) {
+        selectHall(event.state.hall);
+      }
+    } else {
+      setRegistrationMode(null);
+      selectHall(null);
+    }
+  });
+});
+</script>
+</body>
+</html>
