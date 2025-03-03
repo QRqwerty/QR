@@ -460,9 +460,9 @@ window.addEventListener("load", () => {
     
     // Информация об ошибке, если есть
     if (info.error) {
-      debugText += `\n❌ ПОМИЛКА: ${info.error}\n`;
+      debugText += `\n❌ Операцію успішно провалено з помилкою: ${info.error}\n`;
     } else {
-      debugText += "\n✅ Операція виконана успішно!\n";
+      debugText += "\n✅ Операцію успішно виконано\n";
     }
     
     debugInfoDiv.textContent = debugText;
@@ -788,7 +788,7 @@ console.log("Значення visit_timestamps:", userData.visit_timestamps);
       }
       
       debugInfo.dbOperations.push({
-        description: "Користувач найден у системі",
+        description: "Користувача знайдено у системі",
         table: "all_visitors",
         operation: "info",
         data: { id: userData.id, full_name: fullName, registration_time: userData.registration_time, hall_numbers: userData.hall_numbers }
